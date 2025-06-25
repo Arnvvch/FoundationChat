@@ -15,7 +15,7 @@ jobs:
     name: Build using xcodebuild command
     runs-on: macos-latest
     env:
-      scheme: LiveContainer
+      scheme: FoundationChat
       archive_path: archive
     outputs:
       scheme: ${{ steps.scheme.outputs.scheme }}
@@ -24,7 +24,7 @@ jobs:
     steps:
       - uses: maxim-lobanov/setup-xcode@v1
         with:
-          xcode-version: '26.0'
+          xcode-version: '26.0-beta'
       - name: Checkout
         uses: actions/checkout@v3
         with:
