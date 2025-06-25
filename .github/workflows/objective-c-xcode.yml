@@ -5,36 +5,31 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-
 jobs:
   build:
-    name: Build and analyse default scheme using xcodebuild command
-    runs-on: macos-latest
-    env:
-      scheme: FoundationChat
-      archive_path: archive
-    outputs:
-      scheme: ${{ steps.scheme.outputs.scheme }}
-      archive_path: ${{ env.archive_path }}
-      artifact: ${{ env.scheme }}.ipa
-
+    runs-on: macos-15    # macOS 15 runner hosts Xcode 16.x and 26.x betas
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Set Default Scheme
-        run: |
-          scheme_list=$(xcodebuild -list -json | tr -d "\n")
-          default=$(echo $scheme_list | ruby -e "require 'json'; puts JSON.parse(STDIN.gets)['project']['targets'][0]")
-          echo $default | cat >default
-          echo Using default scheme: $default
-      - name: Build
+      - uses: actions/checkout@v4
+
+      - name: Set Xcode 26 beta
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: '26.0-beta'
+
+      - name: Verify Xcode version
+        run: xcodebuild -version
+
+      - name: Build & Analyze
         env:
-          scheme: ${{ 'default' }}
+          scheme: FoundationChat
+          archive_path: archive
         run: |
-          if [ $scheme = default ]; then scheme=$(cat default); fi
-          if [ "`ls -A | grep -i \\.xcworkspace\$`" ]; then filetype_parameter="workspace" && file_to_build="`ls -A | grep -i \\.xcworkspace\$`"; else filetype_parameter="project" && file_to_build="`ls -A | grep -i \\.xcodeproj\$`"; fi
-          file_to_build=`echo $file_to_build | awk '{$1=$1;print}'`
-          xcodebuild clean build analyze -scheme "$scheme" -"$filetype_parameter" "$file_to_build" | xcpretty && exit ${PIPESTATUS[0]}
+          scheme=$(xcodebuild -list -json | ruby -e "require 'json'; print JSON.parse(STDIN.read)['project']['targets'][0]")
+          filetype=project; file=$(ls *.xcodeproj | head -n1)
+          xcodebuild clean build analyze -scheme "$scheme" -$filetype "$file" | xcpretty
+
+
+
 
       - name: Archive
         env:
