@@ -5,9 +5,20 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
+
+
+      
 jobs:
   build:
     runs-on: macos-15    # macOS 15 runner hosts Xcode 16.x and 26.x betas
+    env:
+      scheme: FoundationChat
+      archive_path: archive
+    outputs:
+      scheme: ${{ steps.scheme.outputs.scheme }}
+      archive_path: ${{ env.archive_path }}
+      artifact: ${{ env.scheme }}.ipa
     steps:
       - uses: actions/checkout@v4
 
